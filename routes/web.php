@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AccountController;
+use App\Http\Controllers\TransactionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,7 +20,19 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth'])->name('dashboard');
+    // return view('dashboard');
+    return redirect()->route('dashboard');
+})->middleware(['auth']);
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/accounts', [AccountController::class, 'index'])->name('dashboard');
+    Route::get('/accounts/{userId}', [AccountController::class, 'show'])->name('accounts.show');
+
+    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+    Route::post('/transactions/store', [TransactionController::class, 'store'])->name('transactions.store');
+    Route::get('/transactions/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
+    Route::put('/transactions/create', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::delete('/transactions/create', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+});
 
 require __DIR__.'/auth.php';
