@@ -21,7 +21,7 @@
                             @foreach ($users as $user)
                             <tr>
                             <td class="border border-slate-700 ...">{{ $user->id }}</td>
-                            <td class="border border-slate-700 ..."><a href={{ "/accounts/" . $user->id }}>{{ $user->name }}</a></td>
+                            <td class="underline border border-slate-700 ..."><a href="{{ '/accounts/' . $user->id }}">{{ $user->name }}</a></td>
                             <td class="border border-slate-700 ...">{{ $user->balance }}</td>
                             </tr>
                             @endforeach
