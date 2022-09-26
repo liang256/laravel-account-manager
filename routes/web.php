@@ -30,9 +30,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
     Route::post('/transactions/store', [TransactionController::class, 'store'])->name('transactions.store');
-    Route::get('/transactions/edit', [TransactionController::class, 'edit'])->name('transactions.edit');
-    Route::put('/transactions/create', [TransactionController::class, 'update'])->name('transactions.update');
-    Route::delete('/transactions/create', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    Route::get('/transactions/edit/{trans}', [TransactionController::class, 'edit'])->name('transactions.edit');
+    Route::put('/transactions/update/{trans}', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::delete('/transactions/delete/{trans}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 });
 
 require __DIR__.'/auth.php';

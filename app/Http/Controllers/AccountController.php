@@ -17,6 +17,7 @@ class AccountController extends Controller
     {
         return view("account.show", [
             "transactions" => Transaction::where("user_id", $userId)->orderBy('id')->get(),
+            "userId" => $userId
         ]);
     }
 }

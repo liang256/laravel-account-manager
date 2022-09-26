@@ -39,18 +39,83 @@ class TransactionController extends Controller
         return redirect()->route('accounts.show', ['userId' => $user->id]);
     }
 
-    public function edit()
+    public function edit(Transaction $trans)
     {
-        
+        return view('transaction.edit', ['trans' => $trans]);
     }
 
-    public function update()
+    public function update(Request $request, Transaction $trans)
     {
+        $request->validate([
+            'amount' => 'required|numeric|between:-9999999999.99,9999999999.99',
+        ]);
+
+        $balance = $trans->balance - $trans->amount + $request->amount;
+
+        if ($balance < 0) {
+            return response("invalid amount", 422);
+        }
+
+        $restTransactions = Transaction::where('user_id', $trans->user_id)
+            ->where('id', '>', $trans->id)
+            ->get();
         
+        DB::beginTransaction();
+        $ok = true;
+
+        $trans->update([
+            'amount' => $request->amount,
+            'balance' => $balance,
+        ]);
+        foreach ($restTransactions as $t) {
+            $balance += $t->amount;
+            if ($balance < 0) {
+                $ok = false;
+                break;
+            }
+            $t->update(['balance' => $balance]);
+        }
+
+        if ($ok) {
+            $user = User::findOrFail($trans->user_id);
+            $user->update(['balance' => $balance]);
+            DB::commit();
+            return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
+        }
+
+        DB::rollBack();
+        return response("invalid amount", 422);
     }
 
-    public function destroy()
+    public function destroy(Transaction $trans)
     {
+        $balance = $trans->balance - $trans->amount;
+
+        $restTransactions = Transaction::where('user_id', $trans->user_id)
+            ->where('id', '>', $trans->id)
+            ->get();
         
+        DB::beginTransaction();
+        $ok = true;
+
+        foreach ($restTransactions as $t) {
+            $balance += $t->amount;
+            if ($balance < 0) {
+                $ok = false;
+                break;
+            }
+            $t->update(['balance' => $balance]);
+        }
+
+        if ($ok) {
+            $trans->delete();
+            $user = User::findOrFail($trans->user_id);
+            $user->update(['balance' => $balance]);
+            DB::commit();
+            return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
+        }
+
+        DB::rollBack();
+        return response("the transaction cannot be deleted", 422);
     }
 }
