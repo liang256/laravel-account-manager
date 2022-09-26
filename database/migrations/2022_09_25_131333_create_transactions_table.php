@@ -15,7 +15,7 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('account')->index();
+            $table->unsignedBigInteger('user_id')->index();
             $table->decimal('amount', $precision = 12, $scale = 2);
             $table->decimal('balance', $precision = 12, $scale = 2);
             $table->timestamps();
