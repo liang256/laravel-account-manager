@@ -41,6 +41,9 @@ class TransactionController extends Controller
 
     public function edit(Transaction $trans)
     {
+        if ($trans->user_id != Auth::id()) {
+            return abort(403);
+        }
         return view('transaction.edit', ['trans' => $trans]);
     }
 
@@ -49,6 +52,10 @@ class TransactionController extends Controller
         $request->validate([
             'amount' => 'required|numeric|between:-9999999999.99,9999999999.99',
         ]);
+
+        if ($trans->user_id != Auth::id()) {
+            return abort(403);
+        }
 
         $balance = $trans->balance - $trans->amount + $request->amount;
 
@@ -89,6 +96,9 @@ class TransactionController extends Controller
 
     public function destroy(Transaction $trans)
     {
+        if ($trans->user_id != Auth::id()) {
+            return abort(403);
+        }
         $balance = $trans->balance - $trans->amount;
 
         $restTransactions = Transaction::where('user_id', $trans->user_id)

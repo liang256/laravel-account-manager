@@ -43,13 +43,20 @@ class TransactionControllerTest extends TestCase
     public function test_transactions_edit()
     {
         $trans = Transaction::factory()->create();
+        $anotherUser = User::factory()->create();
         $response = $this->actingAs($trans->user)->get(route('transactions.edit', ['trans' => $trans->id]));
         $response->assertStatus(200);
+
+        $response = $this->actingAs($anotherUser)->get(route('transactions.edit', ['trans' => $trans->id]));
+        $response->assertStatus(403);
     }
 
     public function test_transactions_update()
     {
         $user = User::factory()->create();
+        $anotherUser = User::factory()->create();
+
+        // makes 10 transactions for $user
         for ($i=0; $i<10; $i++) {
             $amount = 100;
             $user->balance += $amount;
@@ -60,8 +67,15 @@ class TransactionControllerTest extends TestCase
             ]);
         }
         $user->save();
-
         $toEdit = $user->transactions->first();
+
+        // authorization check
+        $response = $this->actingAs($anotherUser)->put(
+            route('transactions.update', ['trans' => $toEdit->id]),
+            ['amount' => 1000]
+        );
+        $response->assertStatus(403);
+
         $response = $this->actingAs($user)->put(
             route('transactions.update', ['trans' => $toEdit->id]),
             ['amount' => 1000]
@@ -85,6 +99,9 @@ class TransactionControllerTest extends TestCase
     public function test_transactions_destroy()
     {
         $user = User::factory()->create();
+        $anotherUser = User::factory()->create();
+
+        // makes 10 transactions for $user
         for ($i=0; $i<10; $i++) {
             $amount = 100;
             $user->balance += $amount;
@@ -95,8 +112,14 @@ class TransactionControllerTest extends TestCase
             ]);
         }
         $user->save();
-
         $toRemove = $user->transactions->first();
+
+        // authorization check
+        $response = $this->actingAs($anotherUser)->delete(
+            route('transactions.destroy', ['trans' => $toRemove->id])
+        );
+
+        $response->assertStatus(403);
         $response = $this->actingAs($user)->delete(
             route('transactions.destroy', ['trans' => $toRemove->id])
         );
