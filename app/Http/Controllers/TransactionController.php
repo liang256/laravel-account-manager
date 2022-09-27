@@ -67,6 +67,8 @@ class TransactionController extends Controller
             ->where('id', '>', $trans->id)
             ->get();
 
+        $user = User::findOrFail($trans->user_id);
+
         DB::beginTransaction();
         $ok = true;
 
@@ -84,7 +86,6 @@ class TransactionController extends Controller
         }
 
         if ($ok) {
-            $user = User::findOrFail($trans->user_id);
             $user->update(['balance' => $balance]);
             DB::commit();
             return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
@@ -105,6 +106,8 @@ class TransactionController extends Controller
             ->where('id', '>', $trans->id)
             ->get();
 
+        $user = User::findOrFail($trans->user_id);
+
         DB::beginTransaction();
         $ok = true;
 
@@ -119,7 +122,6 @@ class TransactionController extends Controller
 
         if ($ok) {
             $trans->delete();
-            $user = User::findOrFail($trans->user_id);
             $user->update(['balance' => $balance]);
             DB::commit();
             return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
