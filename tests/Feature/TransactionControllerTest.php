@@ -57,7 +57,7 @@ class TransactionControllerTest extends TestCase
         $anotherUser = User::factory()->create();
 
         // makes 10 transactions for $user
-        for ($i=0; $i<10; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $amount = 100;
             $user->balance += $amount;
             Transaction::create([
@@ -102,7 +102,7 @@ class TransactionControllerTest extends TestCase
         $anotherUser = User::factory()->create();
 
         // makes 10 transactions for $user
-        for ($i=0; $i<10; $i++) {
+        for ($i = 0; $i < 10; $i++) {
             $amount = 100;
             $user->balance += $amount;
             Transaction::create([

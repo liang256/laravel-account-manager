@@ -20,7 +20,7 @@ class TransactionController extends Controller
         $request->validate([
             'amount' => 'required|numeric|between:-9999999999.99,9999999999.99',
         ]);
-        
+
         $user = User::find(Auth::id());
         $newBalance = $user->balance + $request->amount;
         if ($newBalance < 0) {
@@ -66,7 +66,7 @@ class TransactionController extends Controller
         $restTransactions = Transaction::where('user_id', $trans->user_id)
             ->where('id', '>', $trans->id)
             ->get();
-        
+
         DB::beginTransaction();
         $ok = true;
 
@@ -104,7 +104,7 @@ class TransactionController extends Controller
         $restTransactions = Transaction::where('user_id', $trans->user_id)
             ->where('id', '>', $trans->id)
             ->get();
-        
+
         DB::beginTransaction();
         $ok = true;
 
