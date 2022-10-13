@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Services\TransactionService;
 
 class TransactionController extends Controller
 {
@@ -21,29 +22,18 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|between:-9999999999.99,9999999999.99',
         ]);
 
-        $user = User::find(Auth::id());
-        $newBalance = $user->balance + $request->amount;
-        if ($newBalance < 0) {
-            return response('invalid amount', 422);
+        try {
+            TransactionService::create(Auth::id(), $request->amount);
+        } catch (\Throwable $ex) {
+            return response("the transaction cannot be created:" . $ex->getMessage(), 422);
         }
 
-        DB::transaction(function () use ($user, $newBalance, $request) {
-            Transaction::create([
-                'amount' => $request->amount,
-                'balance' => $newBalance,
-                'user_id' => $user->id,
-            ]);
-            $user->update(['balance' => $newBalance]);
-        });
-
-        return redirect()->route('accounts.show', ['userId' => $user->id]);
+        return redirect()->route('accounts.show', ['userId' => Auth::id()]);
     }
 
     public function edit(Transaction $trans)
     {
-        if ($trans->user_id != Auth::id()) {
-            return abort(403);
-        }
+        $this->authorize('update', $trans);
         return view('transaction.edit', ['trans' => $trans]);
     }
 
@@ -55,76 +45,25 @@ class TransactionController extends Controller
 
         $this->authorize('update', $trans);
 
-        $balance = $trans->balance - $trans->amount + $request->amount;
-
-        if ($balance < 0) {
-            return response("invalid amount", 422);
+        try {
+            TransactionService::update($trans->user_id, $trans->id, $request->amount);
+        } catch (\Throwable $ex) {
+            return response("the transaction cannot be updated:" . $ex->getMessage(), 422);
         }
 
-        $restTransactions = Transaction::where('user_id', $trans->user_id)
-            ->where('id', '>', $trans->id)
-            ->get();
-
-        $user = User::findOrFail($trans->user_id);
-
-        DB::beginTransaction();
-        $ok = true;
-
-        $trans->update([
-            'amount' => $request->amount,
-            'balance' => $balance,
-        ]);
-        foreach ($restTransactions as $t) {
-            $balance += $t->amount;
-            if ($balance < 0) {
-                $ok = false;
-                break;
-            }
-            $t->update(['balance' => $balance]);
-        }
-
-        if ($ok) {
-            $user->update(['balance' => $balance]);
-            DB::commit();
-            return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
-        }
-
-        DB::rollBack();
-        return response("invalid amount", 422);
+        return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
     }
 
     public function destroy(Transaction $trans)
     {
         $this->authorize('delete', $trans);
 
-        $balance = $trans->balance - $trans->amount;
-
-        $restTransactions = Transaction::where('user_id', $trans->user_id)
-            ->where('id', '>', $trans->id)
-            ->get();
-
-        $user = User::findOrFail($trans->user_id);
-
-        DB::beginTransaction();
-        $ok = true;
-
-        foreach ($restTransactions as $t) {
-            $balance += $t->amount;
-            if ($balance < 0) {
-                $ok = false;
-                break;
-            }
-            $t->update(['balance' => $balance]);
+        try {
+            TransactionService::delete($trans->user_id, $trans->id);
+        } catch (\Throwable $ex) {
+            return response("the transaction cannot be deleted:" . $ex->getMessage(), 422);
         }
 
-        if ($ok) {
-            $trans->delete();
-            $user->update(['balance' => $balance]);
-            DB::commit();
-            return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
-        }
-
-        DB::rollBack();
-        return response("the transaction cannot be deleted", 422);
+        return redirect()->route('accounts.show', ['userId' => $trans->user_id]);
     }
 }
