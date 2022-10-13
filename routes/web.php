@@ -28,11 +28,13 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/accounts', [AccountController::class, 'index'])->name('dashboard');
     Route::get('/accounts/{userId}', [AccountController::class, 'show'])->name('accounts.show');
 
-    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
-    Route::post('/transactions/store', [TransactionController::class, 'store'])->name('transactions.store');
-    Route::get('/transactions/edit/{trans}', [TransactionController::class, 'edit'])->name('transactions.edit');
-    Route::put('/transactions/update/{trans}', [TransactionController::class, 'update'])->name('transactions.update');
-    Route::delete('/transactions/delete/{trans}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+    Route::prefix('transactions')->name('transactions.')->group(function () {
+        Route::get('/create', [TransactionController::class, 'create'])->name('create');
+        Route::post('/store', [TransactionController::class, 'store'])->name('store');
+        Route::get('/edit/{trans}', [TransactionController::class, 'edit'])->name('edit');
+        Route::put('/update/{trans}', [TransactionController::class, 'update'])->name('update');
+        Route::delete('/delete/{trans}', [TransactionController::class, 'destroy'])->name('destroy');
+    });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
